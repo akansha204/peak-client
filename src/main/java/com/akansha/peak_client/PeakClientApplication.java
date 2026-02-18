@@ -15,10 +15,13 @@ public class PeakClientApplication {
 	@Bean
 	public CommandLineRunner test (LeaderboardGrpcClient grpcClient){
 		return args -> {
-			Thread.sleep(2000);
-			grpcClient.updateScore("alice", 100);
+//			Thread.sleep(2000);
+//			grpcClient.Join("gooner");
+//			Thread.sleep(1000);
+//			grpcClient.Join("alpha-male");
+			grpcClient.updateScore("alpha-male", 100);
 			Thread.sleep(1000);
-			grpcClient.updateScore("bob", 500);
+			grpcClient.updateScore("gooner", 500);
 		};
 	}
 

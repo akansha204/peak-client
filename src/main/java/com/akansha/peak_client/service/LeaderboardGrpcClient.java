@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class LeaderboardGrpcClient {
     private ManagedChannel channel;
     private LeaderboardServiceGrpc.LeaderboardServiceStub asyncStub;
+    private LeaderboardQueryServiceGrpc.LeaderboardQueryServiceBlockingStub queryStub;
     private StreamObserver<ClientEvent> requestObserver;
 
     @PostConstruct
@@ -24,13 +25,20 @@ public class LeaderboardGrpcClient {
 
         // create async stub
         asyncStub = LeaderboardServiceGrpc.newStub(channel);
+        queryStub = LeaderboardQueryServiceGrpc.newBlockingStub(channel);
 
         //opens the bidi stream
         requestObserver = asyncStub.streamLeaderboard(new StreamObserver<ServerEvent>() {
             @Override
             public void onNext(ServerEvent serverEvent) {
-                System.out.println("Received Server Event");
-                System.out.println(serverEvent);
+                System.out.println("\n------ NEW SNAPSHOT ------");
+
+                LeaderboardSnapshot snapshot = serverEvent.getSnapshot();
+                for(LeaderboardEntry entry : snapshot.getEntriesList()){
+                    System.out.println("User: " + entry.getUserId()  +
+                            " Score: " + entry.getScore() +
+                            " Rank: " + entry.getRank());
+                }
             }
 
             @Override
@@ -44,7 +52,7 @@ public class LeaderboardGrpcClient {
             }
         });
     }
-    private void sendJoin(String userId){
+    public void Join(String userId){
         ClientEvent joinEvent = ClientEvent.newBuilder()
                 .setJoin(
                         JoinLeaderboard.newBuilder()
@@ -64,6 +72,9 @@ public class LeaderboardGrpcClient {
                 )
                 .build();
         requestObserver.onNext(scoreEvent);
+    }
+    public LeaderboardSnapshot getLeaderboard(){
+        return queryStub.getLeaderboard(com.google.protobuf.Empty.newBuilder().build());
     }
 
     @PreDestroy
